@@ -1,19 +1,23 @@
 import type Action from "@/lib/actions/Action";
-import HomeAction from "@/lib/actions/HomeAction";
-import AboutAction from "@/lib/actions/AboutAction";
-import Error404Action from "../actions/Error404Action";
+import Error404Action from "@/lib/actions/Error404Action";
+import type { Routing } from "@/lib/types";
 
 export default class App {
-  run() {
-    const path = this.getCurrentPath();
-    const action = this.mapActionToPath(path);
-    action.execute();
+  private routing: Routing;
 
-    window.addEventListener("hashchange", () => {
-      const path = this.getCurrentPath();
-      const action = this.mapActionToPath(path);
-      action.execute();
-    });
+  constructor(routing: Routing) {
+    this.routing = routing;
+  }
+
+  run() {
+    window.addEventListener("hashchange", () => this.handleAction());
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  }
+
+  private handleAction() {
+    const path = this.getCurrentPath();
+    const action = this.getActionForPath(path);
+    action.execute();
   }
 
   private getCurrentPath(): string {
@@ -24,11 +28,11 @@ export default class App {
     return path;
   }
 
-  private mapActionToPath(path: string): Action {
-    if (path == "/") {
-      return new HomeAction();
-    } else if (path == "/about") {
-      return new AboutAction();
+  private getActionForPath(path: string): Action {
+    for (const route of this.routing) {
+      if (route.path.match(path)) {
+        return route.action();
+      }
     }
 
     return new Error404Action();
