@@ -30,8 +30,11 @@ export default class App {
 
   private getActionForPath(path: string): Action {
     for (const route of this.routing) {
-      if (route.path.match(path)) {
-        return route.action();
+      if (path.match(route.path)) {
+        const action = route.action();
+        action.path = path;
+
+        return action;
       }
     }
 
